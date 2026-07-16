@@ -1,0 +1,26 @@
+name: default
+description: Базовые критерии оценки брифа на соответствие ТЗ
+criteria:
+  - id: completeness
+    name: Полнота
+    description: Насколько бриф покрывает все разделы и требования из ТЗ
+    weight: 0.30
+    threshold: 0.70
+
+  - id: clarity
+    name: Ясность
+    description: Насколько чётко и однозначно сформулированы требования в брифе
+    weight: 0.25
+    threshold: 0.65
+
+  - id: feasibility
+    name: Реализуемость
+    description: Соответствие заявленного объёма брифа техническим и ресурсным ограничениям ТЗ
+    weight: 0.25
+    threshold: 0.60
+
+  - id: alignment
+    name: Согласованность
+    description: Соответствие целей, метрик и приоритетов брифа целям ТЗ
+    weight: 0.20
+    threshold: 0.75
