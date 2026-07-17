@@ -47,10 +47,10 @@ OPENROUTER_API_KEY=ваш_ключ
 
 ## Запуск
 
-Положите текст брифа в файл, например `brief.txt`, и выполните:
+Положите текст брифа в файл, например `sample_brief.txt`, и выполните:
 
 ```bash
-brief-evaluator evaluate --brief brief.txt
+brief-evaluator evaluate --brief sample_brief.txt
 ```
 
 Пример вывода – черновик письма заказчику в консоли.
