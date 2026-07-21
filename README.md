@@ -4,60 +4,53 @@
 
 ## Возможности
 
-- Извлечение структурированных данных из текста брифа (название, цель, задачи, направление и т.д.)
+- Извлечение структурированных данных из текста брифа
 - Оценка по гибким критериям (YAML-конфиг)
 - Генерация уточняющих вопросов
 - Предложение минимально жизнеспособного продукта (MVP)
 - Черновик ответа заказчику
+- Работа через YandexGPT (или локальные модели Ollama)
 
 ## Технологии
 
 - Python 3.10+
 - Pydantic
 - LangChain
-- Ollama (локальные LLM)
+- YandexGPT / Ollama
 - Click (CLI)
 
 ## Установка
 
 ```bash
-# Клонировать репозиторий
 git clone https://github.com/rainwaint/brief-ai-assistant.git
 cd brief-ai-assistant
-
-# Создать виртуальное окружение
 python -m venv venv
-source venv/bin/activate   # Linux/Mac
-# или
-venv\Scripts\activate      # Windows
-
-# Установить зависимости
+source venv/bin/activate  # или venv\Scripts\activate
 pip install -e .
 ```
 
 ## Настройка
 
-Создайте файл `.env` (опционально, если используете OpenRouter):
+Создайте файл `.env`:
 
 ```env
-OPENROUTER_API_KEY=ваш_ключ
+YANDEX_API_KEY=ваш_ключ
+YANDEX_FOLDER_ID=ваш_folder_id
 ```
 
-Критерии оценки находятся в `config/criteria.yaml` – их можно редактировать без изменения кода.
+Критерии оценки находятся в `config/criteria.yaml`.
 
 ## Запуск
 
-Положите текст брифа в файл, например `sample_brief.txt`, и выполните:
-
 ```bash
-brief-evaluator evaluate --brief sample_brief.txt
+brief-evaluator evaluate --brief sample_brief.txt --save
 ```
 
-Пример вывода – черновик письма заказчику в консоли.
+Результат сохранится в `results/result_*.json`.
 
 ## Пример брифа
 
-Пример брифа можно найти в файле `sample_brief.txt`.
+В файле `sample_brief.txt` приведён пример брифа для тестирования.
 
 ## Тесты
 
@@ -65,35 +58,31 @@ brief-evaluator evaluate --brief sample_brief.txt
 pytest tests/
 ```
 
-## Структура проекта
+## Структура
 
 ```
 brief-evaluator/
 ├── config/
-│   └── criteria.yaml       # критерии оценки
+│   └── criteria.yaml
 ├── src/
 │   └── brief_evaluator/
-│       ├── extractor/      # извлечение данных
-│       ├── evaluator/      # оценка
+│       ├── extractor/
+│       ├── evaluator/
 │       ├── question_generator/
 │       ├── mvp_suggester/
 │       ├── response_writer/
-│       ├── llm/            # абстракция над LLM (Ollama, OpenRouter)
-│       ├── models.py       # Pydantic-модели
-│       ├── pipeline.py     # основной пайплайн
-│       ├── cli.py          # CLI
-│       └── config.py       # загрузка конфигов
-├── tests/                  # тесты
+│       ├── llm/
+│       ├── models.py
+│       ├── pipeline.py
+│       ├── cli.py
+│       └── config.py
+├── tests/
 ├── pyproject.toml
 ├── README.md
-└── .gitignore
+└── .env.example
 ```
 
-## Примечания
 
-- Проект использует локальную модель Ollama. Убедитесь, что Ollama запущен и модель скачана (например, `ollama pull llama3`).
-- Для извлечения данных используется простой regex – для продакшена рекомендуется заменить на LLM-извлечение.
-- Все результаты объяснимы – рекомендации сопровождаются комментариями.
 
 
 

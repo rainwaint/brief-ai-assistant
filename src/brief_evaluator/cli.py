@@ -1,30 +1,25 @@
-"""Command-line interface for brief evaluation."""
-
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-
 import click
 
 from brief_evaluator.config import YamlCriteriaProvider
 from brief_evaluator.pipeline import EvaluationPipeline
-# from brief_evaluator.llm.openrouter import OpenRouterLLMClient
-from brief_evaluator.extractor.stub import RegexBriefExtractor
+from brief_evaluator.llm.yandex import YandexGPTClient  # <-- импорт
+from brief_evaluator.extractor.stub import LLMBriefExtractor
 from brief_evaluator.evaluator.stub import LLMBriefEvaluator
 from brief_evaluator.question_generator.stub import LLMQuestionGenerator
 from brief_evaluator.mvp_suggester.stub import LLMMVPSuggester
 from brief_evaluator.response_writer.stub import LLMResponseWriter
-from brief_evaluator.llm.ollama import OllamaLLMClient
 
 
 def build_default_pipeline(criteria_path: Path | None = None) -> EvaluationPipeline:
-    from brief_evaluator.llm.ollama import OllamaLLMClient
-    # Можно указать любую модель из списка: tinyllama, phi3, mistral, llama3
-    llm = OllamaLLMClient(model="llama3") # или "llama3", "phi3", "tinyllama"
+    # Используем YandexGPT вместо Ollama
+    llm = YandexGPTClient(model="yandexgpt-lite", timeout=60)
     provider = YamlCriteriaProvider(criteria_path) if criteria_path else YamlCriteriaProvider()
+
     return EvaluationPipeline(
-        extractor = RegexBriefExtractor(),
+        extractor=LLMBriefExtractor(llm),
         evaluator=LLMBriefEvaluator(llm),
         question_generator=LLMQuestionGenerator(llm),
         mvp_suggester=LLMMVPSuggester(llm),
@@ -36,52 +31,25 @@ def build_default_pipeline(criteria_path: Path | None = None) -> EvaluationPipel
 @click.group()
 @click.version_option(package_name="brief_evaluator")
 def main() -> None:
-    """AI-ассистент для оценки брифов на соответствие ТЗ."""
+    """AI-ассистент для оценки брифов."""
 
 
 @main.command()
-@click.option(
-    "--brief",
-    "brief_path",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    help="Путь к файлу брифа",
-)
-@click.option(
-    "--tz",
-    "tz_path",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    help="Путь к файлу технического задания (ТЗ)",
-)
-@click.option(
-    "--criteria",
-    "criteria_path",
-    type=click.Path(exists=True, dir_okay=False, path_type=Path),
-    help="Путь к YAML-файлу критериев",
-)
-def evaluate(
-    brief_path: Path | None,
-    tz_path: Path | None,
-    criteria_path: Path | None,
-) -> None:
-    """Оценить бриф на соответствие ТЗ."""
-    pipeline = build_default_pipeline(criteria_path)
+@click.option("--brief", type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Путь к файлу брифа")
+@click.option("--save", is_flag=True, help="Сохранить результат в JSON")
+def evaluate(brief: Path | None, save: bool) -> None:
+    pipeline = build_default_pipeline()
 
-    if brief_path is not None:
-        response = pipeline.run_from_files(brief_path, tz_path=tz_path)
-    else:
-        if sys.stdin.isatty():
-            raise click.UsageError(
-                "Укажите --brief или передайте текст брифа через stdin."
-            )
-        brief_text = sys.stdin.read().strip()
-        if not brief_text:
-            raise click.UsageError(
-                "Укажите --brief или передайте текст брифа через stdin."
-            )
-        technical_spec = tz_path.read_text(encoding="utf-8") if tz_path else None
-        response = pipeline.run(brief_text, technical_spec=technical_spec)
-
+    if brief is None:
+        raise click.UsageError("Укажите --brief")
+    
+    response = pipeline.run_from_files(brief)
     click.echo(response.formatted_text)
+
+    if save:
+        from brief_evaluator.logger import save_result
+        brief_text = brief.read_text(encoding="utf-8")
+        save_result(response, brief_text)
 
 
 if __name__ == "__main__":

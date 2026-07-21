@@ -1,26 +1,44 @@
-name: default
-description: Базовые критерии оценки брифа на соответствие ТЗ
+name: "Критерии оценки брифов"
+description: "Расширенные критерии для студенческих проектов"
 criteria:
-  - id: completeness
-    name: Полнота
-    description: Насколько бриф покрывает все разделы и требования из ТЗ
-    weight: 0.30
+  - id: "has_goal"
+    name: "Полнота цели"
+    description: "Цель проекта чётко сформулирована"
+    weight: 0.20
     threshold: 0.70
 
-  - id: clarity
-    name: Ясность
-    description: Насколько чётко и однозначно сформулированы требования в брифе
-    weight: 0.25
+  - id: "has_tasks"
+    name: "Детализация задач"
+    description: "Задачи конкретны и измеримы"
+    weight: 0.20
     threshold: 0.65
 
-  - id: feasibility
-    name: Реализуемость
-    description: Соответствие заявленного объёма брифа техническим и ресурсным ограничениям ТЗ
-    weight: 0.25
+  - id: "has_materials"
+    name: "Наличие материалов"
+    description: "Есть исходные данные, макеты, API или контент"
+    weight: 0.15
     threshold: 0.60
 
-  - id: alignment
-    name: Согласованность
-    description: Соответствие целей, метрик и приоритетов брифа целям ТЗ
-    weight: 0.20
-    threshold: 0.75
+  - id: "budget"
+    name: "Бюджет"
+    description: "Бюджет проекта определён и реалистичен"
+    weight: 0.10
+    threshold: 0.50
+
+  - id: "timeline"
+    name: "Сроки"
+    description: "Сроки выполнения реалистичны"
+    weight: 0.15
+    threshold: 0.60
+
+  - id: "team_size"
+    name: "Размер команды"
+    description: "Команда соответствует объёму работ"
+    weight: 0.10
+    threshold: 0.50
+
+  - id: "feasibility"
+    name: "Реализуемость"
+    description: "Проект технически и ресурсно выполним"
+    weight: 0.10
+    threshold: 0.60

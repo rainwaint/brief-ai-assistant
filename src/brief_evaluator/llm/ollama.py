@@ -10,22 +10,23 @@ from brief_evaluator.llm.base import BaseLLMClient
 
 
 class OllamaLLMClient(BaseLLMClient):
-    """LLM client for local Ollama server via OpenAI-compatible API."""
-
     def __init__(
         self,
-        model: str = "mistral",
+        model: str = "phi3",
         base_url: str = "http://localhost:11434/v1",
-        temperature: float = 0.1,
+        temperature: float = 0.3,
+        timeout: int = 120,
     ) -> None:
         self.model = model
         self.base_url = base_url
         self.temperature = temperature
+        self.timeout = timeout
         self._llm = ChatOpenAI(
-            openai_api_key="fake-key",  # Ollama не требует ключа
+            openai_api_key="fake-key",
             base_url=self.base_url,
             model_name=self.model,
             temperature=self.temperature,
+            request_timeout=timeout,
         )
 
     def complete(self, prompt: str, *, system: str | None = None, **kwargs: Any) -> str:
