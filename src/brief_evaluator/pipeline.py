@@ -27,6 +27,8 @@ class EvaluationPipeline:
         response_writer: ResponseWriter,
         criteria_provider: CriteriaProvider,
         retriever=None,
+        use_rag: bool = False,
+        rag_folder: str = "data/projects_examples",
     ) -> None:
         self.extractor = extractor
         self.evaluator = evaluator
@@ -35,15 +37,25 @@ class EvaluationPipeline:
         self.response_writer = response_writer
         self.criteria_provider = criteria_provider
         self.retriever = retriever
+        self.use_rag = use_rag
+        self.rag_folder = rag_folder
+
+        # Если RAG включён, но ретривер не передан — создаём свой
+        if use_rag and retriever is None:
+            from brief_evaluator.rag.bert_retriever import BertRetriever
+            self.retriever = BertRetriever()
+            self.retriever.add_folder(rag_folder)
+            print(f"✅ RAG инициализирован, папка: {rag_folder}")
 
     def run(self, raw_text: str, *, technical_spec: str | None = None) -> AssistantResponse:
         print("📋 1/7 Загрузка критериев...")
         criteria = self.criteria_provider.load()
         print("   ✅ Критерии загружены")
 
-        if self.retriever:
+        # RAG-поиск
+        if self.use_rag and self.retriever:
             print("🔍 2/7 Поиск похожих проектов (RAG)...")
-            similar_projects = self.retriever.retrieve(raw_text, top_k=2)
+            similar_projects = self.retriever.search(raw_text, top_k=2)
             print(f"   ✅ Найдено проектов: {len(similar_projects)}")
         else:
             print("⏭️  RAG отключён")

@@ -1,4 +1,5 @@
 import streamlit as st
+from pathlib import Path
 from brief_evaluator.cli import build_default_pipeline
 
 st.set_page_config(page_title="Оценка брифов", layout="wide")
@@ -15,7 +16,7 @@ if uploaded_file is not None:
             pipeline = build_default_pipeline()
             result = pipeline.run(brief_text)
 
-        st.subheader("📊 Результат")
+        st.subheader("📊 Результат оценки")
         col1, col2 = st.columns(2)
         with col1:
             st.metric("Общий балл", f"{result.evaluation.overall_score:.2f}")
@@ -32,11 +33,11 @@ if uploaded_file is not None:
         for q in result.questions:
             st.write(f"- {q.text}")
 
-        st.subheader("🚀 MVP")
+        st.subheader("🚀 Предложение MVP")
         st.write(result.mvp.description)
-        st.write("**Функции:**")
+        st.write("**Ключевые функции:**")
         for f in result.mvp.features:
             st.write(f"- {f}")
 
-        st.subheader("✉️ Письмо заказчику")
+        st.subheader("✉️ Черновик ответа заказчику")
         st.text_area("Письмо", result.formatted_text, height=300)

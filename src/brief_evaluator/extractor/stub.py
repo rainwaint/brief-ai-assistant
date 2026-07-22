@@ -26,39 +26,61 @@ class LLMBriefExtractor(BriefExtractor):
         self.llm = llm_client
 
     def extract(self, raw_text: str, *, technical_spec: str | None = None) -> Brief:
-        system_prompt = "Ты — эксперт по извлечению данных из брифов. Отвечай строго в формате JSON. Используй русский язык."
+        system_prompt = "Ты — эксперт по извлечению данных из брифов. Отвечай кратко. Используй русский язык."
+
         user_prompt = f"""
-Извлеки из брифа данные и верни JSON:
-{{
-    "title": "название проекта",
-    "goal": "цель проекта",
-    "expected_result": "ожидаемый результат",
-    "tasks": ["задача 1", "задача 2"],
-    "domain": "предметная область",
-    "direction": "development | design | analytics | marketing | ai | education | mixed",
-    "available_materials": ["материал 1"],
-    "missing_information": ["чего не хватает"],
-    "complexity_factors": ["факторы сложности"]
-}}
+    Извлеки из брифа:
 
-Текст брифа:
-{raw_text}
-"""
+    1. Название проекта
+    2. Цель проекта
+    3. Ожидаемый результат
+    4. Задачи (через запятую)
+    5. Предметная область
+    6. Направление (development, design, analytics, marketing, ai, education, mixed)
+    7. Доступные материалы
+    8. Отсутствующая информация
+    9. Факторы сложности
+
+    Ответь списком (каждый пункт с новой строки):
+    Название: ...
+    Цель: ...
+    ...
+    """
         response = self.llm.complete(user_prompt, system=system_prompt)
-        try:
-            data = json.loads(response)
-        except:
-            data = {}
 
+        # Парсим ответ
+        data = {}
+        for line in response.splitlines():
+            line = line.strip()
+            if "Название:" in line:
+                data["title"] = line.replace("Название:", "").strip()
+            elif "Цель:" in line:
+                data["goal"] = line.replace("Цель:", "").strip()
+            elif "Ожидаемый результат:" in line:
+                data["expected_result"] = line.replace("Ожидаемый результат:", "").strip()
+            elif "Задачи:" in line:
+                data["tasks"] = line.replace("Задачи:", "").strip()
+            elif "Предметная область:" in line:
+                data["domain"] = line.replace("Предметная область:", "").strip()
+            elif "Направление:" in line:
+                data["direction"] = line.replace("Направление:", "").strip()
+            elif "Доступные материалы:" in line:
+                data["available_materials"] = line.replace("Доступные материалы:", "").strip()
+            elif "Отсутствующая информация:" in line:
+                data["missing_information"] = line.replace("Отсутствующая информация:", "").strip()
+            elif "Факторы сложности:" in line:
+                data["complexity_factors"] = line.replace("Факторы сложности:", "").strip()
+
+        # Заполняем значения
         title = data.get("title", "Без названия")
         goal = data.get("goal", "")
         expected = data.get("expected_result", "")
-        tasks = data.get("tasks", [])
+        tasks = [t.strip() for t in data.get("tasks", "").split(",") if t.strip()]
         domain = data.get("domain", "")
         direction = data.get("direction", "mixed")
-        materials = data.get("available_materials", [])
-        missing = data.get("missing_information", [])
-        complexity = data.get("complexity_factors", [])
+        materials = [m.strip() for m in data.get("available_materials", "").split(",") if m.strip()]
+        missing = [m.strip() for m in data.get("missing_information", "").split(",") if m.strip()]
+        complexity = [c.strip() for c in data.get("complexity_factors", "").split(",") if c.strip()]
 
         sections = [
             BriefSection(title="Цель", content=goal),
@@ -72,7 +94,7 @@ class LLMBriefExtractor(BriefExtractor):
         ]
         return Brief(
             title=title,
-            summary=f"Извлечено через LLM",
+            summary=f"Извлечено через LLM ({len(raw_text)} символов)",
             sections=sections,
             raw_text=raw_text,
             metadata={"source": "llm"},

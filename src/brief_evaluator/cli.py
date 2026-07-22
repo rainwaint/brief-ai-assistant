@@ -11,20 +11,21 @@ from brief_evaluator.evaluator.stub import LLMBriefEvaluator
 from brief_evaluator.question_generator.stub import LLMQuestionGenerator
 from brief_evaluator.mvp_suggester.stub import LLMMVPSuggester
 from brief_evaluator.response_writer.stub import LLMResponseWriter
+from brief_evaluator.evaluator.stub import StubBriefEvaluator
 
 
-def build_default_pipeline(criteria_path: Path | None = None) -> EvaluationPipeline:
-    # Используем YandexGPT вместо Ollama
+def build_default_pipeline(criteria_path: Path | None = None, use_rag: bool = False) -> EvaluationPipeline:
     llm = YandexGPTClient(model="yandexgpt-lite", timeout=60)
     provider = YamlCriteriaProvider(criteria_path) if criteria_path else YamlCriteriaProvider()
 
     return EvaluationPipeline(
         extractor=LLMBriefExtractor(llm),
-        evaluator=LLMBriefEvaluator(llm),
+        evaluator=StubBriefEvaluator(),  # <-- ЗАМЕНА (было LLMBriefEvaluator(llm))
         question_generator=LLMQuestionGenerator(llm),
         mvp_suggester=LLMMVPSuggester(llm),
         response_writer=LLMResponseWriter(llm),
         criteria_provider=provider,
+        use_rag=use_rag,
     )
 
 
@@ -37,8 +38,9 @@ def main() -> None:
 @main.command()
 @click.option("--brief", type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Путь к файлу брифа")
 @click.option("--save", is_flag=True, help="Сохранить результат в JSON")
-def evaluate(brief: Path | None, save: bool) -> None:
-    pipeline = build_default_pipeline()
+@click.option("--rag", is_flag=True, help="Использовать RAG-поиск")
+def evaluate(brief: Path | None, save: bool, rag: bool) -> None:
+    pipeline = build_default_pipeline(use_rag=rag)
 
     if brief is None:
         raise click.UsageError("Укажите --brief")
